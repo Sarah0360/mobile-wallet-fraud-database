@@ -9,6 +9,8 @@ dbConnection();
 // Use middlewares
 app.use(express.json());
 
+
+
 // Use routes
 app.use(userRouter);
 

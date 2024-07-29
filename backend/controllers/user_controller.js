@@ -26,3 +26,18 @@ export const signUp = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const logout = async(req, res, next) => {
+  try { 
+   // Check if session exists
+   if (!req.session) {
+    return res.sendStatus(404); // Not Found if session does not exist
+  }
+    req.session.destroy();
+
+    res.status(200).json({message: 'Logged Out Successfully'});
+  } catch (error) {
+    next(error);
+  }
+}
