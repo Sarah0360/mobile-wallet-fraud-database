@@ -173,3 +173,59 @@ export const checkANumber = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const getFraudReports = async (req, res, next) => {
+  try {
+    // GET THE USER ID FROM THE SESSION OR THE REQUEST
+    const userId = req.session?.user?.id || req.user?.id;
+    if (!userId) {
+      return res
+        .status(401)
+        .send({ message: "You do not have permission to view these reports" });
+    }
+    const user = await UserModel.findById(userId);
+
+    const { phoneNumber, status, dateReported, userAdded, limit = 10, sort = "{}", field = "{}" } = req.query;
+
+    // Building the filter object based on query parameters
+    const filter = {};
+
+    if (phoneNumber) {
+      filter.phoneNumber = phoneNumber;
+    }
+
+    if (status) {
+      filter.status = status;
+    }
+
+    if (dateReported) {
+      filter.dateReported = { dateReported: { $gte: new Date(dateReported).toISOString() } }
+    };
+
+    if (userAdded === "true") {
+      filter.user = userId;
+    }
+
+    // Adding condition to show only public or user's own private reports
+    if (user.status) {
+      filter.$or = [
+        { status: 'public' },
+        { $and: [{ status: 'private' }, { user: userSessionId }] }
+      ]
+    }
+
+    const fraudReports = await FraudReportModel.find(filter)
+      .sort(sort)
+      .select(field)
+      .limit(limit)
+
+
+    res.status(200).json({ fraudReports });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+

@@ -6,6 +6,7 @@ import {
   deleteFraudReport,
   updateFraudReport,
   getAFraudReport,
+  getFraudReports
 } from "../controllers/fraudReport_controller.js";
 
 import { isAuthenticated } from "../middlewares/auth.js";
@@ -38,3 +39,5 @@ fraudReportRouter.get(
 );
 
 fraudReportRouter.get("/api/fraud/check/:phone", isAuthenticated, checkANumber);
+
+fraudReportRouter.get("/api/fraud/reports", isAuthenticated, getFraudReports);
