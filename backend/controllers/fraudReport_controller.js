@@ -175,57 +175,34 @@ export const checkANumber = async (req, res, next) => {
 };
 
 
-export const getFraudReports = async (req, res, next) => {
+export const getFraudReports  = async(req, res, next) => {
   try {
-    // GET THE USER ID FROM THE SESSION OR THE REQUEST
-    const userId = req.session?.user?.id || req.user?.id;
-    if (!userId) {
-      return res
-        .status(401)
-        .send({ message: "You do not have permission to view these reports" });
-    }
-    const user = await UserModel.findById(userId);
-
-    const { phoneNumber, status, dateReported, userAdded, limit = 10, sort = "{}", field = "{}" } = req.query;
-
-    // Building the filter object based on query parameters
-    const filter = {};
-
-    if (phoneNumber) {
-      filter.phoneNumber = phoneNumber;
+    const id = req.session?.user?.id || req?.user?.id;
+        const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).send("User not found");
     }
 
-    if (status) {
-      filter.status = status;
-    }
+// Get Query Params
+const {limit= 10, skip= 0, filter="{}", sort="{}", fields="{}"} = req.query;
 
-    if (dateReported) {
-      filter.dateReported = { dateReported: { $gte: new Date(dateReported).toISOString() } }
-    };
-
-    if (userAdded === "true") {
-      filter.user = userId;
-    }
-
-    // Adding condition to show only public or user's own private reports
     if (user.status) {
       filter.$or = [
         { status: 'public' },
         { $and: [{ status: 'private' }, { user: userSessionId }] }
       ]
     }
-
-    const fraudReports = await FraudReportModel.find(filter)
-      .sort(sort)
-      .select(field)
-      .limit(limit)
-
-
-    res.status(200).json({ fraudReports });
-
-  } catch (error) {
-    next(error);
+      
+      // Get All Categories From database
+      const allReport = await FraudReportModel
+      .find(JSON.parse(filter))
+      .select(JSON.parse(fields))
+      .limit(JSON.parse(limit)) //you can limit it to 10 or any number=>.limit(limit || 10)
+      .skip(JSON.parse(skip))
+      .sort(JSON.parse(sort))
+      //Return response
+      res.status (200).json(allReport);
+  } catch (error) {   
+      next(error);
   }
-};
-
-
+}
